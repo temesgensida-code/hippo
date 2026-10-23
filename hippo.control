@@ -1,0 +1,6 @@
+comment = 'hippo:  Created by pgrx'
+default_version = '@CARGO_VERSION@'
+module_pathname = 'hippo'
+relocatable = false
+superuser = true
+trusted = false

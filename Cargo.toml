@@ -1,0 +1,30 @@
+[package]
+name = "hippo"
+version = "0.1.0"
+edition = "2021"
+description = "Hippo: a sparse, histogram-based, low-overhead index access method for PostgreSQL (after Yu & Sarwat, 2016)"
+license = "MIT OR Apache-2.0"
+rust-version = "1.80"
+
+[lib]
+crate-type = ["cdylib"]
+
+[features]
+default = ["pg16"]
+pg14 = ["pgrx/pg14"]
+pg15 = ["pgrx/pg15"]
+pg16 = ["pgrx/pg16"]
+pg17 = ["pgrx/pg17"]
+pg18 = ["pgrx/pg18"]
+
+[dependencies]
+pgrx = "=0.19.3"
+
+[profile.dev]
+panic = "unwind"
+
+[profile.release]
+panic = "unwind"
+opt-level = 3
+lto = "thin"
+codegen-units = 4

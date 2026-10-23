@@ -1,0 +1,25 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        pg: [14, 15, 16, 17, 18]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { key: "pg${{ matrix.pg }}" }
+      - run: cargo install --locked cargo-pgrx --version 0.19.3
+      - run: cargo pgrx init --pg${{ matrix.pg }} download
+      - run: cargo pgrx install --release --no-default-features --features pg${{ matrix.pg }}
+      - name: Start cluster
+        run: cargo pgrx start pg${{ matrix.pg }}
+      - name: Differential correctness suite (with WAL consistency checking)
+        run: |
+          PSQL=$(ls $HOME/.pgrx/${{ matrix.pg }}.*/pgrx-install/bin/psql | head -1)
+          PORT=288${{ matrix.pg }}
+          $PSQL -h localhost -p $PORT -d postgres -c "ALTER SYSTEM SET wal_consistency_checking='generic'" -c "SELECT pg_reload_conf()"
+          $PSQL -h localhost -p $PORT -d postgres -v ON_ERROR_STOP=1 -f tests/correctness.sql | tail -5
